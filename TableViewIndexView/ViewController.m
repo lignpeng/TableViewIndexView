@@ -7,13 +7,15 @@
 //
 
 #import "ViewController.h"
+#import "indexView/IndexView.h"
 
-@interface ViewController ()<UITableViewDelegate,UITableViewDataSource>
+@interface ViewController ()<UITableViewDelegate,UITableViewDataSource,IndexViewDelegate,IndexViewDataSource>
 
 @property(nonatomic, strong) UITableView *tableView;
 @property(nonatomic, strong) NSMutableArray *dataSource;
 @property(nonatomic, strong) NSArray *sectionArray;
 @property(nonatomic, strong) NSArray *indexArray;
+@property(nonatomic, strong) IndexView *indexView;
 
 @end
 
@@ -29,7 +31,17 @@
     self.view.backgroundColor = [UIColor whiteColor];
     self.tableView.frame = self.view.bounds;
     [self.view addSubview:self.tableView];
+    [self.view addSubview:self.indexView];
+//    [self.tableView reloadData];
+//    [self.indexView reload];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(update)];
+    [self update];
+}
+
+- (void)update {
     [self.tableView reloadData];
+    [self.indexView reload];
+    [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] atScrollPosition:UITableViewScrollPositionTop animated:YES];
 }
 
 - (void)initData {
@@ -47,6 +59,26 @@
     }
 }
 
+- (void)selectedIndexTitle:(NSString *)title atIndex:(NSInteger )index {
+    [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:index] atScrollPosition:UITableViewScrollPositionTop animated:YES];
+}
+
+- (NSArray<NSString *> *)indexViewTitles {
+    return self.indexArray;
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self.indexView scrollViewDidScroll:scrollView];
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section {
+    [self.indexView tableViewWillDisplayHeaderViewForSection:section];
+}
+
+- (void)tableView:(UITableView *)tableView didEndDisplayingHeaderView:(UIView *)view forSection:(NSInteger)section {
+    [self.indexView tableViewDidEndDisplayingHeaderViewForSection:section];
+    
+}
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return self.sectionArray.count;
@@ -88,6 +120,18 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
     return 0.01f;
+}
+
+- (IndexView *)indexView {
+    if (!_indexView) {
+        _indexView = [IndexView new];
+        _indexView.delegate = self;
+        _indexView.dataSource = self;
+        CGRect frame = [UIScreen mainScreen].bounds;
+        CGFloat widt = 30;
+        _indexView.frame = (CGRect){CGRectGetWidth(frame) - widt,80 ,widt,CGRectGetHeight(frame)};
+    }
+    return _indexView;
 }
 
 - (UITableView *)tableView {
